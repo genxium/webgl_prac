@@ -248,3 +248,25 @@ MDN.createContext = function (canvas) {
 
   return gl;
 }
+
+MDN.computeNaiveProjectionMatrix = function() {
+  var naiveScaleFactor = 0.5;
+  return projection = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, naiveScaleFactor, // Note the extra scale factor here
+    0, 0, 0, naiveScaleFactor
+  ]
+
+  // This matrix copies the point and sets the W component to 1 + (z * scaleFactor)
+};
+
+
+MDN.computePerspectiveMatrix = function() {
+  return MDN.perspectiveMatrix(
+    Math.PI * 0.5, // fieldOfViewInRadians
+    (window.innerWidth / window.innerHeight), // aspectRatio
+    1, // nearClippingPlaneDistance
+    50, // farClippingPlaneDistance
+  );
+};

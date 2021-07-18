@@ -35,7 +35,6 @@
 
       void main() {
         gl_FragColor = vColor;
-        // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
       }
       </script>
   </head>
@@ -44,6 +43,23 @@
     <canvas id="canvas"></canvas>
     <script src="./shared.js"></script>
     <script src="./cube_demo_main.js"></script>
+    <script>
+
+      // Params for "MDN.computePerspectiveMatrix", see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
+      // var posX = 0, posY = 0, posZ = -20;
+      // var initScale = 5;
+
+      var posX = 0, posY = -0.1, posZ = 0;
+      var initScale = 0.2;
+
+      var cube = new CubeDemo(
+        MDN.computeNaiveProjectionMatrix, // MDN.computePerspectiveMatrix, 
+        initScale, initScale, initScale,
+        posX, posY, posZ 
+      );
+
+      cube.draw();
+    </script>
   </body>
 
 </html>
