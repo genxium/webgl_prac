@@ -177,7 +177,7 @@ MDN.perspectiveMatrixGeneral = function(
   Reference 
   - https://www.songho.ca/opengl/gl_projectionmatrix.html
 
-  In the current case we have "r+l == 0 && t+b == 0" and need flip the rows & cols in the article to use. 
+  In the current case we have "r+l == 0 && t+b == 0" and need flip the rows & cols in the article to use, see https://webglfundamentals.org/webgl/lessons/webgl-matrix-vs-math.html for the convension of WebGL matrices. 
   */
 
   var nearWidthInv = 1 / (r - l),
