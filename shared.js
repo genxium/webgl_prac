@@ -291,12 +291,3 @@ MDN.createContext = function(canvas) {
 
   return gl;
 }
-
-MDN.computePerspectiveMatrix = function() {
-  return MDN.perspectiveMatrixWithFovAndAspectRatio(
-    Math.PI * 0.5, // fieldOfViewInRadians
-    (window.innerWidth / window.innerHeight), // aspectRatio
-    1, // nearClippingPlaneDistance
-    50, // farClippingPlaneDistance
-  );
-};

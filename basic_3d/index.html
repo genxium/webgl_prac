@@ -5,13 +5,13 @@
 
       <!-- The vertex shader operates on individual vertices in our model data by setting gl_Position -->
       <script id="vertex-shader" type="x-shader/x-vertex">
-      //Each point has a position and color
-      attribute vec3 position;
-      attribute vec4 color;
+      //Each point has a point and color
+      attribute vec3 point;
+      attribute vec4 faceColor;
 
       // The transformation matrices
-      uniform mat4 model;
-      uniform mat4 projection;
+      uniform mat4 toWorld;
+      uniform mat4 toCam;
 
       // Pass the color attribute down to the fragment shader
       varying vec4 vColor;
@@ -19,12 +19,12 @@
       void main() {
 
         // Pass the color down to the fragment shader
-        vColor = color;
+        vColor = faceColor;
 
         // Read the multiplication in reverse order, the original point is moved
         // into clip space, and then projected into a perspective view by filling
         // in the W component
-        gl_Position = projection * model * vec4( position, 1.0 );
+        gl_Position = toCam * toWorld * vec4( point, 1.0 );
       }
       </script>
 
@@ -41,20 +41,54 @@
 
   <body>
     <canvas id="canvas"></canvas>
-    <script src="./shared.js"></script>
+    <script src="../shared.js"></script>
     <script src="./cube_demo_main.js"></script>
     <script>
-      // Params for "MDN.computePerspectiveMatrix", see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
       var posX = 0, posY = 0, posZ = -20;
       var initScale = 5;
 
-      var cube = new CubeDemo(
-        MDN.computePerspectiveMatrix, 
+      var cube = new Cube (
         initScale, initScale, initScale,
         posX, posY, posZ 
       );
 
-      cube.draw();
+      // Prep the canvas
+      var canvas = document.getElementById("canvas");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // Grab a context
+      var gl = MDN.createContext(this.canvas);
+
+      // Grab the variable locations of the shader programs
+      var shaderVars = setupShaderPrograms(gl); 
+
+      // Create a static buffer only for type conversion (limited for this basic example only, usually the contents in "buffer" will be updated per frame)
+      var buffers = {
+        points: gl.createBuffer(),
+        colors: gl.createBuffer(),
+        elements: gl.createBuffer()
+      };
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.points); 
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.points), gl.STATIC_DRAW); // Hereby writing "cube.points" into the in-RAM space allocated for "buffers.points"
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.colors);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.colors), gl.STATIC_DRAW);
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.elements);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cube.elements), gl.STATIC_DRAW);
+      
+      // Start the drawing loop
+      var now = Date.now();
+      var toWorldMat = computeToWorldMatrix(now, cube);
+      var toCamMat = MDN.perspectiveMatrixWithFovAndAspectRatio(
+        Math.PI * 0.5, // fieldOfViewInRadians
+        (window.innerWidth / window.innerHeight), // aspectRatio
+        1, // nearClippingPlaneDistance
+        50, // farClippingPlaneDistance
+      );
+      draw(gl, shaderVars.vsVars, buffers, toWorldMat, toCamMat);
     </script>
   </body>
 
