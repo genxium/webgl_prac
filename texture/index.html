@@ -5,34 +5,33 @@
       <script id="vertex-shader" type="x-shader/x-vertex">
       //Each point has a point and color
       attribute vec3 point;
-      attribute vec4 faceColor;
-
+      attribute vec2 textureCoord;
+      
       // The transformation matrices
       uniform mat4 toWorld;
       uniform mat4 toCam;
 
       // Pass the color attribute down to the fragment shader
       varying vec4 vColor;
+      varying highp vec2 vTextureCoord;
 
       void main() {
-
-        // Pass the color down to the fragment shader
-        vColor = faceColor;
-
         // Read the multiplication in reverse order, the original point is moved
         // into clip space, and then projected into a perspective view by filling
         // in the W component
         gl_Position = toCam * toWorld * vec4( point, 1.0 );
+        vTextureCoord = textureCoord;
       }
       </script>
 
       <!-- The fragment shader determines the color of the final pixel by setting gl_FragColor -->
       <script id="fragment-shader" type="x-shader/x-fragment">
-      precision mediump float;
-      varying vec4 vColor;
+      varying highp vec2 vTextureCoord;
+  
+      uniform sampler2D uSampler;
 
       void main() {
-        gl_FragColor = vColor;
+        gl_FragColor = texture2D(uSampler, vTextureCoord);
       }
       </script>
       <link rel="stylesheet" href="./index.css" type="text/css">
@@ -65,30 +64,66 @@
       // Create a static buffer only for type conversion (limited for this basic example only, usually the contents in "buffer" will be updated per frame)
       var buffers = {
         points: gl.createBuffer(),
-        colors: gl.createBuffer(),
-        elements: gl.createBuffer()
+        elements: gl.createBuffer(),
+        textureCoords: gl.createBuffer(),
+        texture: gl.createTexture()
       };
 
       gl.bindBuffer(gl.ARRAY_BUFFER, buffers.points); 
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.points), gl.STATIC_DRAW); // Hereby writing "cube.points" into the in-RAM space allocated for "buffers.points"
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.colors);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.colors), gl.STATIC_DRAW);
-
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.elements);
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cube.elements), gl.STATIC_DRAW);
       
-      // Start the drawing loop
-      var now = Date.now();
-      var toWorldMat = computeToWorldMatrix(now, cube);
-      var toCamMat = MDN.perspectiveMatrixWithFovAndAspectRatio(
-        Math.PI * 0.5, // fieldOfViewInRadians
-        (window.innerWidth / window.innerHeight), // aspectRatio
-        1, // nearClippingPlaneDistance
-        50, // farClippingPlaneDistance
-      );
-      draw(gl, shaderVars.vsVars, buffers, toWorldMat, toCamMat);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoords);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        // Front
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Back
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Top
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Bottom
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Right
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Left
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+      ]), gl.STATIC_DRAW);
+
+      MDN.loadTexture(gl, "./cubetexture.png", buffers.texture)
+      .then((trueOrFalse) => {
+        if (!trueOrFalse) return;
+        // Start the drawing loop
+        var now = Date.now();
+        var toWorldMat = computeToWorldMatrix(now, cube);
+        var toCamMat = MDN.perspectiveMatrixWithFovAndAspectRatio(
+          Math.PI * 0.5, // fieldOfViewInRadians
+          (window.innerWidth / window.innerHeight), // aspectRatio
+          1, // nearClippingPlaneDistance
+          50, // farClippingPlaneDistance
+        );
+        draw(gl, shaderVars.vsVars, shaderVars.fsVars, buffers, toWorldMat, toCamMat);
+      });
     </script>
   </body>
-
 </html>
